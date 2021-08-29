@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+<!--   设置业务逻辑层的包扫描器，目的指定的路径下，使用@Service注解的类，Spring负责创建对象，并添加到容器 -->
+    <context:component-scan base-package="com.hnuc.service"></context:component-scan>
+
+<!--    设置事务管理器-->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+<!--        连接的数据库，指定数据源-->
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+<!--    添加事务的切面-->
+    <tx:advice id="myadvice" transaction-manager="transactionManager">
+        <tx:attributes>
+<!--            如果方法中含有以下字符串都将产生事务-->
+<!--            查询类的方法 用read-only-->
+            <tx:method name="*select*" read-only="true"/>
+            <tx:method name="*find*" read-only="true"/>
+            <tx:method name="*get*" read-only="true"/>
+            <tx:method name="*search*" read-only="true"/>
+<!--       增、删、改 用propagation属性，其值是事务的传播行为：一定有事务-->
+            <tx:method name="*insert*" propagation="REQUIRED"/>
+            <tx:method name="*save*" propagation="REQUIRED"/>
+            <tx:method name="*add*" propagation="REQUIRED"/>
+            <tx:method name="*delete*" propagation="REQUIRED"/>
+            <tx:method name="*remove*" propagation="REQUIRED"/>
+            <tx:method name="*clear*" propagation="REQUIRED"/>
+            <tx:method name="*update*" propagation="REQUIRED"/>
+            <tx:method name="*modify*" propagation="REQUIRED"/>
+            <tx:method name="*change*" propagation="REQUIRED"/>
+            <tx:method name="*set*" propagation="REQUIRED"/>
+<!--            除了以上的方法外，其它的方法让其支持事务-->
+<!--            如果方法中含有以下字符串都将支持事务 * 代表所有-->
+            <tx:method name="*" propagation="SUPPORTS"/>
+        </tx:attributes>
+    </tx:advice>
+
+<!--完成切面和切入点的织入-->
+    <aop:config>
+<!--execution(* com.hnuc.service.*.*(..))表示：service包中的所有类中的所有方法都可以添加事务
+         但具体是哪些方法要添加事务还不清楚？
+         -->
+        <aop:pointcut id="mypointcut" expression="execution(* com.hnuc.service.*.*(..))"/>
+<!--绑定:将定义好的事务与要添加事务的类（该类中的方法）进行绑定-->
+        <aop:advisor advice-ref="myadvice" pointcut-ref="mypointcut"></aop:advisor>
+    </aop:config>
+</beans>
